@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    strategy:
+      matrix:
+        java: ['21', '25']
+        os: ['ubuntu-latest', 'windows-latest']
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up JDK
+      uses: actions/setup-java@v6
+      with:
+        java-version: ${{ matrix.java }}
+        distribution: 'zulu'
+        cache: 'maven'
+    - name: print Java version
+      run: java -version
+    - name: Build
+      env:
+        MAVEN_OPTS: --add-opens java.base/java.util=ALL-UNNAMED
+      run: ./mvnw -B clean spotless:check package 
+        biz.aQute.bnd:bnd-resolver-maven-plugin:resolve --file pom.xml
+    timeout-minutes: 150
